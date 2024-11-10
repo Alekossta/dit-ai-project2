@@ -204,7 +204,54 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        def minMax(gameState:GameState, agentIndex, depth=0):
+            # check if we have a terminal state
+            if(gameState.isWin() or gameState.isLose() or depth == self.depth):
+                return self.evaluationFunction(gameState), None
+            
+            # handle the indexes
+
+            # in case we reach the final agent, reset the index and add depth
+            # else just move to the next agent
+            newAgentIndex = agentIndex
+            newDepth = depth
+            if(agentIndex == (gameState.getNumAgents() - 1)):
+                newAgentIndex = 0
+                newDepth = depth + 1
+            else:
+                newAgentIndex = agentIndex + 1
+            
+            
+            # if agent is player
+            if agentIndex == 0:
+                maxValue = -float('inf')
+                maxBestAction = None
+                legalActions = gameState.getLegalActions(agentIndex)
+                for legalAction in legalActions:
+                    succesorGameState = gameState.generateSuccessor(agentIndex,legalAction)
+                    successorMaxValue, succesorMinAction = minMax(succesorGameState, newAgentIndex, newDepth)
+                    if(successorMaxValue > maxValue):
+                        maxValue = successorMaxValue
+                        maxBestAction = legalAction
+                
+                return maxValue, maxBestAction
+            else: # agent is a ghost
+                minValue = float('inf')
+                minBestAction = None
+                legalActions = gameState.getLegalActions(agentIndex)
+                for legalAction in legalActions:
+                    succesorGameState = gameState.generateSuccessor(agentIndex,legalAction)
+                    succesorMinValue, succesorMinAction = minMax(succesorGameState, newAgentIndex, newDepth)
+                    if(succesorMinValue < minValue):
+                        minValue = succesorMinValue
+                        minBestAction = legalAction
+
+                return minValue, minBestAction
+            
+        value, action = minMax(gameState, 0, 0)
+        return action    
+
+
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
