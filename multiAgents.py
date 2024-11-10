@@ -67,15 +67,83 @@ class ReflexAgent(Agent):
         Print out these variables to see what you're getting, then combine them
         to create a masterful evaluation function.
         """
-        # Useful information you can extract from a GameState (pacman.py)
         successorGameState = currentGameState.generatePacmanSuccessor(action)
-        newPos = successorGameState.getPacmanPosition()
-        newFood = successorGameState.getFood()
-        newGhostStates = successorGameState.getGhostStates()
-        newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
+        newGhostPositions = successorGameState.getGhostPositions()
+        newPacmanPosition = successorGameState.getPacmanPosition()
 
-        "*** YOUR CODE HERE ***"
-        return successorGameState.getScore()
+        # find minimum distance from pacman to a ghost.
+        distancesFromPlayerToGhosts = []
+        for ghostPosition in newGhostPositions:
+            newDistance = manhattanDistance(newPacmanPosition, ghostPosition)
+            distancesFromPlayerToGhosts.append(newDistance)
+
+        minDistanceFromPlayerToGhosts = min(distancesFromPlayerToGhosts, default=0)
+
+        # find minimum distance from pacman to a food.
+        distancesFromPlayerToFoods = []
+        foodPositions = successorGameState.getFood().asList()
+        for foodPosition in foodPositions:
+            newDistance = manhattanDistance(newPacmanPosition, foodPosition)
+            distancesFromPlayerToFoods.append(newDistance)
+
+        minDistanceFromPlayerToFoods = min(distancesFromPlayerToFoods, default=0)
+
+        # find minimum distance from pacman to all capsules
+        distancesFromPlayerToCapsules = []
+        capsulePositions = successorGameState.getCapsules()
+        for capsulePosition in capsulePositions:
+            newDistance = manhattanDistance(newPacmanPosition, capsulePosition)
+            distancesFromPlayerToCapsules.append(newDistance)
+
+        minDistanceFromPlayerToCapsules = min(distancesFromPlayerToCapsules, default=0)
+
+
+        # find difference in scores
+        oldScore = currentGameState.getScore()
+        newScore = successorGameState.getScore()
+        scoreDifference = newScore - oldScore
+
+        # find smallest scare time and determine if we have any scared ghosts. in this case
+        # the closer the ghost the better.
+        newGhostStates = successorGameState.getGhostStates()
+        scaredTimers = []
+        for ghostState in newGhostStates:
+            scaredTimers.append(ghostState.scaredTimer)
+        smallestScareTime = min(scaredTimers, default=0) # set 1 because we dont want to divide by 0        
+        if(smallestScareTime != 0):
+            minDistanceFromPlayerToGhosts = -minDistanceFromPlayerToGhosts
+
+
+        newNumberOfFoods = successorGameState.getNumFood()
+
+        stopPenalty = 0
+        if(action=="Stop"):
+            stopPenalty = -10
+        
+        # some weights for each factor
+        distanceFromFoodWeight = 0.3
+        distanceFromGhostWeight = 0.02
+        numberOfFoodsWeights = 0.2
+        scoreDifferenceWeight = 0.3
+        capsuleWeight = 10
+
+        distanceFromFoodsFactor = (1/(minDistanceFromPlayerToFoods+1)) * distanceFromFoodWeight
+        distanceFromGhostsFactor = minDistanceFromPlayerToGhosts * distanceFromGhostWeight
+        distanceFromCapsulesFactor = (1/ (minDistanceFromPlayerToCapsules+1)) * capsuleWeight
+        numberOfFoodsFactor = newNumberOfFoods * numberOfFoodsWeights
+        scoreFactor = scoreDifference * scoreDifferenceWeight
+
+
+        return (
+        distanceFromFoodsFactor
+        + distanceFromGhostsFactor
+        + distanceFromCapsulesFactor
+        + numberOfFoodsFactor
+        + scoreFactor
+        + stopPenalty
+        )
+
+      
 
 def scoreEvaluationFunction(currentGameState: GameState):
     """
