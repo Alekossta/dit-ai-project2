@@ -369,11 +369,63 @@ def betterEvaluationFunction(currentGameState: GameState):
     """
     Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
     evaluation function (question 5).
-
-    DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    pacmanPosition = currentGameState.getPacmanPosition()
+
+    # calculate win factor
+    winWeight = float("inf")
+    isWin = 0
+    if currentGameState.isWin():
+        isWin = 1 * winWeight
+    
+    # calculate lose factor
+    isLose = 0
+    loseWeight = -float("inf")
+    if currentGameState.isLose():
+        isLose = 1 * loseWeight
+
+    # calculate score factor
+    scoreWeight = 1000
+    score = currentGameState.getScore() * scoreWeight
+
+    # calculate capsules factor
+    capsuleWeight = 10000000
+    capsulesNum = len(currentGameState.getCapsules())
+    capsule = capsuleWeight / (capsulesNum + 1)
+
+    # calculate distance from player of all foods
+    foodDistToPlayer = []
+    foodPositions = currentGameState.getFood().asList()
+    for foodPos in foodPositions:
+        newDistance = manhattanDistance(pacmanPosition, foodPos)
+        foodDistToPlayer.append(newDistance)
+    
+    foodWeight = 45
+    food = foodWeight / (sum(foodDistToPlayer) + 1) # +1 to avoid division with 1
+
+    # calculate distance from player to all ghosts
+    ghostDistToPlayer = []
+    scaredGhostDistToPlayer = []
+    ghostStates = currentGameState.getGhostStates()
+    ghostsPositions = currentGameState.getGhostPositions()
+    for i in range(len(ghostStates)):
+        newDistance = manhattanDistance(pacmanPosition, ghostsPositions[i])
+        if(ghostStates[i].scaredTimer == 0):
+            ghostDistToPlayer.append(newDistance)
+        else:
+            scaredGhostDistToPlayer.append(newDistance * ghostStates[i].scaredTimer)
+
+    scaredGhostWeight = 1
+    scaredGhost =  scaredGhostWeight / (sum(scaredGhostDistToPlayer) + 1)
+
+    ghostWeight = 1
+    ghost = sum(ghostDistToPlayer) * ghostWeight
+    
+    # final addition
+    return isWin + isLose + score + capsule + food + ghost + scaredGhost
+
+
 
 # Abbreviation
 better = betterEvaluationFunction
