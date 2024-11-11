@@ -252,15 +252,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         return action    
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
-    """
-    Your minimax agent with alpha-beta pruning (question 3)
-    """
-
-    def getAction(self, gameState: GameState):
-        """
-        Returns the minimax action using self.depth and self.evaluationFunction
-        """
-        "*** YOUR CODE HERE ***"
+    def getAction(self, gameState):
         def alphaBetaPruning(gameState:GameState, agentIndex, alpha, beta, depth=0):
             # check if we have a terminal state
             if(gameState.isWin() or gameState.isLose() or depth == self.depth):
@@ -281,34 +273,40 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             
             # if agent is player
             if agentIndex == 0:
+                maxValue = -float('inf')
                 maxBestAction = None
                 legalActions = gameState.getLegalActions(agentIndex)
                 for legalAction in legalActions:
-                    if beta <= alpha:
-                        break
                     succesorGameState = gameState.generateSuccessor(agentIndex,legalAction)
-                    successorBetaValue, succesorMinAction = alphaBetaPruning(succesorGameState, newAgentIndex, alpha, beta, newDepth)
-                    if(successorBetaValue > beta):
-                        beta = successorBetaValue
+                    successorMaxValue, succesorMinAction = alphaBetaPruning(succesorGameState, newAgentIndex, alpha, beta, newDepth)
+                    if(successorMaxValue > maxValue):
+                        maxValue = successorMaxValue
                         maxBestAction = legalAction
-                
-                return beta, maxBestAction
+
+                    if(successorMaxValue > beta):
+                        break
+                    alpha = max(alpha, successorMaxValue)
+
+                return maxValue, maxBestAction
             else: # agent is a ghost
+                minValue = float('inf')
                 minBestAction = None
                 legalActions = gameState.getLegalActions(agentIndex)
                 for legalAction in legalActions:
-                    if beta <= alpha:
-                        break
                     succesorGameState = gameState.generateSuccessor(agentIndex,legalAction)
-                    succesorAlphaValue, succesorMinAction = alphaBetaPruning(succesorGameState, newAgentIndex, alpha, beta, newDepth)
-                    if(succesorAlphaValue < alpha):
-                        alpha = succesorAlphaValue
+                    succesorMinValue, succesorMinAction = alphaBetaPruning(succesorGameState, newAgentIndex, alpha, beta, newDepth)
+                    if(succesorMinValue < minValue):
+                        minValue = succesorMinValue
                         minBestAction = legalAction
 
-                return alpha, minBestAction
+                    if minValue < alpha:
+                        break
+                    beta = min(beta, succesorMinValue)
+
+                return minValue, minBestAction
             
         value, action = alphaBetaPruning(gameState, 0, -float("inf"), float("inf"), 0)
-        return action    
+        return action   
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
