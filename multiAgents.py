@@ -283,7 +283,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
                         maxValue = successorMaxValue
                         maxBestAction = legalAction
 
-                    if(successorMaxValue > beta):
+                    if successorMaxValue > beta:
                         break
                     alpha = max(alpha, successorMaxValue)
 
@@ -299,7 +299,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
                         minValue = succesorMinValue
                         minBestAction = legalAction
 
-                    if minValue < alpha:
+                    if succesorMinValue < alpha:
                         break
                     beta = min(beta, succesorMinValue)
 
